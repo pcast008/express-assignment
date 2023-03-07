@@ -22,6 +22,14 @@ describe("DELETE /dogs/:id", () => {
     expect(status).not.toEqual(404);
   });
 
+  it("Delete endpoint should return a status of 400 and a error message if the id is not parse-able to number", async () => {
+    const { status, data } = await deleteRequest(
+      `/dogs/dummy`
+    );
+    expect(status).toEqual(400);
+    expect(data.message).toEqual("id should be a number");
+  });
+
   it("deleting doomslayer should delete him from the database and return a 200", async () => {
     const { data, status } = await deleteRequest(
       `/dogs/${doomslayer.id}`
