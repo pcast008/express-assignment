@@ -30,33 +30,31 @@ app.get("/dogs/:id", async (req, res) => {
     where: { id: id },
   });
 
-  if (!dog) {
-    return res.status(HttpStatusCode.NO_CONTENT).send();
-  } else {
-    return res.status(HttpStatusCode.OK).send(dog);
-  }
+  return !dog
+    ? res.status(HttpStatusCode.NO_CONTENT).send()
+    : res.status(HttpStatusCode.OK).send(dog);
 });
 
 app.post("/dogs", async (req, res) => {
-  const dogKeys = ["name", "description", "age", "breed"];
-  const { name, description, age } = req.body;
+  const validKeys = ["name", "description", "age", "breed"];
   const errors: string[] = [];
 
   for (const key of Object.keys(req.body)) {
-    if (!dogKeys.includes(key)) {
-      errors.push(`${key} is not a valid key`);
+    console.log(key);
+    if (!validKeys.includes(key)) {
+      errors.push(`'${key}' is not a valid key`);
     }
   }
 
-  if (typeof name !== "string") {
+  if (typeof req.body.name !== "string") {
     errors.push("name should be a string");
   }
 
-  if (typeof description !== "string") {
+  if (typeof req.body.description !== "string") {
     errors.push("description should be a string");
   }
 
-  if (typeof age !== "number") {
+  if (typeof req.body.age !== "number") {
     errors.push("age should be a number");
   }
 
@@ -73,7 +71,6 @@ app.post("/dogs", async (req, res) => {
   }
 });
 
-// FIXME:
 app.delete("/dogs/:id", async (req, res) => {
   const id = parseInt(req.params.id);
 
@@ -98,8 +95,32 @@ app.delete("/dogs/:id", async (req, res) => {
   }
 });
 
-// TODO:
-// app.patch("/dogs/:id", async (req, res) => {});
+app.patch("/dogs/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  const validKeys = ["name", "description", "age", "breed"];
+  const errors: string[] = [];
+
+  for (const key of Object.keys(req.body)) {
+    if (!validKeys.includes(key)) {
+      errors.push(`'${key}' is not a valid key`);
+    }
+  }
+
+  if (errors.length > 0) {
+    return res
+      .status(HttpStatusCode.BAD_REQUEST)
+      .send({ errors });
+  } else {
+    const dog = await prisma.dog.update({
+      where: {
+        id: id,
+      },
+      data: req.body,
+    });
+
+    return res.status(HttpStatusCode.CREATED).send(dog);
+  }
+});
 
 // all your code should go above this line
 app.use(errorHandleMiddleware);
